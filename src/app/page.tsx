@@ -2,7 +2,8 @@ import Link from "next/link";
 import LocationList from "@/components/LocationList";
 import HaulList from "@/components/HaulList";
 import Calendar from "@/components/Calendar";
-import { getRecentLocations, getRecentHaul, getKeepersByDateForMonth } from "@/lib/airtable";
+import AddHaulDialog from "@/components/AddHaulDialog";
+import { getRecentLocations, getRecentHaul, getKeepersByDateForMonth, getAllLocations } from "@/lib/airtable";
 import { clampToSeason, defaultMonth } from "@/lib/calendar";
 
 export default async function Home({
@@ -18,10 +19,11 @@ export default async function Home({
       ? clampToSeason({ year: requestedYear, month: requestedMonth })
       : defaultMonth();
 
-  const [locations, hauls, keepersByDate] = await Promise.all([
+  const [locations, hauls, keepersByDate, allLocations] = await Promise.all([
     getRecentLocations(10),
     getRecentHaul(10),
     getKeepersByDateForMonth(year, month),
+    getAllLocations(),
   ]);
 
   return (
@@ -43,11 +45,9 @@ export default async function Home({
 
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Recent Haul</h1>
+          <h1 className="text-xl font-bold">Recent Hauls</h1>
           <div className="flex items-center gap-3">
-            <Link href="/haul/new" className="btn-primary text-sm">
-              + Add Haul
-            </Link>
+            <AddHaulDialog locations={allLocations} />
             <Link href="/haul" className="text-sm font-semibold text-(--color-primary)">
               See All
             </Link>

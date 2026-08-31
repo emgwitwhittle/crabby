@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createLocation, createHaul } from "@/lib/airtable";
+import { createLocation, createHaul, updateHaul } from "@/lib/airtable";
 import { getCurrentUser } from "@/lib/session";
 
 export async function addLocationAction(formData: FormData) {
@@ -33,7 +33,6 @@ export async function addLocationAction(formData: FormData) {
 }
 
 export async function addHaulAction(formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
   const date = String(formData.get("date") ?? "").trim();
   const keepersRaw = String(formData.get("keepers") ?? "").trim();
   const thrownBackRaw = String(formData.get("thrownBack") ?? "").trim();
@@ -41,9 +40,6 @@ export async function addHaulAction(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim();
   const locationId = String(formData.get("locationId") ?? "").trim();
 
-  if (!name) {
-    throw new Error("Name is required.");
-  }
   if (!date) {
     throw new Error("Date is required.");
   }
@@ -51,7 +47,6 @@ export async function addHaulAction(formData: FormData) {
   const user = await getCurrentUser();
 
   const haul = await createHaul({
-    name,
     date,
     keepers: keepersRaw ? Number(keepersRaw) : undefined,
     thrownBack: thrownBackRaw ? Number(thrownBackRaw) : undefined,
@@ -66,4 +61,33 @@ export async function addHaulAction(formData: FormData) {
   if (locationId) revalidatePath(`/locations/${locationId}`);
   revalidatePath(`/calendar/${date}`);
   redirect(`/haul/${haul.id}`);
+}
+
+export async function editHaulAction(haulId: string, formData: FormData) {
+  const date = String(formData.get("date") ?? "").trim();
+  const keepersRaw = String(formData.get("keepers") ?? "").trim();
+  const thrownBackRaw = String(formData.get("thrownBack") ?? "").trim();
+  const by = String(formData.get("by") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+  const locationId = String(formData.get("locationId") ?? "").trim();
+
+  if (!date) {
+    throw new Error("Date is required.");
+  }
+
+  await updateHaul(haulId, {
+    date,
+    keepers: keepersRaw ? Number(keepersRaw) : undefined,
+    thrownBack: thrownBackRaw ? Number(thrownBackRaw) : undefined,
+    by: by || undefined,
+    notes: notes || undefined,
+    locationId: locationId || undefined,
+  });
+
+  revalidatePath("/");
+  revalidatePath("/haul");
+  revalidatePath(`/haul/${haulId}`);
+  if (locationId) revalidatePath(`/locations/${locationId}`);
+  revalidatePath(`/calendar/${date}`);
+  redirect(`/haul/${haulId}`);
 }

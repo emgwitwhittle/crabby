@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { LocationRecord } from "@/lib/airtable";
+import { formatDateShort } from "@/lib/format";
 
 export default function LocationList({ locations }: { locations: LocationRecord[] }) {
   if (locations.length === 0) {
@@ -18,6 +19,9 @@ export default function LocationList({ locations }: { locations: LocationRecord[
               <p className="font-semibold">Pin {location.pinNumber}</p>
               {location.locationDescription && (
                 <p className="text-sm text-(--color-muted)">{location.locationDescription}</p>
+              )}
+              {location.date && (
+                <p className="text-xs text-(--color-muted)">{formatDateShort(location.date)}</p>
               )}
             </div>
             <span className="text-sm text-(--color-muted)">{location.haul.length} haul(s)</span>

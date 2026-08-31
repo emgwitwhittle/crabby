@@ -38,8 +38,10 @@ export const LOCATION_FIELDS = {
   LONGITUDE: "Longitude",
 } as const;
 
+// Haul has no writable "Name" field — display names come from "Unique", a
+// read-only formula field, so it's never written on create/update.
 export const HAUL_FIELDS = {
-  NAME: "Name",
+  UNIQUE: "Unique",
   ADDED_BY: "Added by",
   BY: "By",
   CREATE_DATE: "Create Date",
@@ -48,7 +50,6 @@ export const HAUL_FIELDS = {
   LOCATIONS: "Locations",
   NOTES: "Notes",
   THROWN_BACK: "Thrown Back",
-  TEMP_LOCATION_NOTES: "Temp Location Notes",
   YEAR: "Year",
 } as const;
 
@@ -77,7 +78,7 @@ export type LocationRecord = {
 
 export type HaulRecord = {
   id: string;
-  name: string;
+  unique: string;
   addedBy: string[];
   by: string | null;
   createDate: string | null;
@@ -86,7 +87,6 @@ export type HaulRecord = {
   locations: string[];
   notes: string;
   thrownBack: number | null;
-  tempLocationNotes: string;
   year: number | null;
 };
 
@@ -119,7 +119,7 @@ function toHaulRecord(record: Airtable.Record<Airtable.FieldSet>): HaulRecord {
   const f = record.fields;
   return {
     id: record.id,
-    name: String(f[HAUL_FIELDS.NAME] ?? ""),
+    unique: String(f[HAUL_FIELDS.UNIQUE] ?? ""),
     addedBy: (f[HAUL_FIELDS.ADDED_BY] as string[] | undefined) ?? [],
     by: (f[HAUL_FIELDS.BY] as string | undefined) ?? null,
     createDate: (f[HAUL_FIELDS.CREATE_DATE] as string | undefined) ?? null,
@@ -129,7 +129,6 @@ function toHaulRecord(record: Airtable.Record<Airtable.FieldSet>): HaulRecord {
     notes: String(f[HAUL_FIELDS.NOTES] ?? ""),
     thrownBack:
       f[HAUL_FIELDS.THROWN_BACK] === undefined ? null : Number(f[HAUL_FIELDS.THROWN_BACK]),
-    tempLocationNotes: String(f[HAUL_FIELDS.TEMP_LOCATION_NOTES] ?? ""),
     year: f[HAUL_FIELDS.YEAR] === undefined ? null : Number(f[HAUL_FIELDS.YEAR]),
   };
 }
@@ -281,7 +280,6 @@ export async function getKeepersByDateForMonth(
 }
 
 export async function createHaul(fields: {
-  name: string;
   date: string;
   keepers?: number;
   notes?: string;
@@ -291,7 +289,6 @@ export async function createHaul(fields: {
   addedByUserId?: string;
 }): Promise<HaulRecord> {
   const airtableFields: Airtable.FieldSet = {
-    [HAUL_FIELDS.NAME]: fields.name,
     [HAUL_FIELDS.DATE]: fields.date,
   };
   if (fields.keepers !== undefined) airtableFields[HAUL_FIELDS.KEEPERS] = fields.keepers;
@@ -302,6 +299,30 @@ export async function createHaul(fields: {
   if (fields.addedByUserId) airtableFields[HAUL_FIELDS.ADDED_BY] = [fields.addedByUserId];
 
   const record = await base(TABLES.HAUL).create(airtableFields, { typecast: true });
+  return toHaulRecord(record);
+}
+
+export async function updateHaul(
+  id: string,
+  fields: {
+    date: string;
+    keepers?: number;
+    notes?: string;
+    by?: string;
+    thrownBack?: number;
+    locationId?: string;
+  },
+): Promise<HaulRecord> {
+  const airtableFields: Airtable.FieldSet = {
+    [HAUL_FIELDS.DATE]: fields.date,
+    [HAUL_FIELDS.KEEPERS]: fields.keepers ?? 0,
+    [HAUL_FIELDS.NOTES]: fields.notes ?? "",
+    [HAUL_FIELDS.BY]: fields.by ?? "",
+    [HAUL_FIELDS.THROWN_BACK]: fields.thrownBack ?? 0,
+  };
+  airtableFields[HAUL_FIELDS.LOCATIONS] = fields.locationId ? [fields.locationId] : [];
+
+  const record = await base(TABLES.HAUL).update(id, airtableFields, { typecast: true });
   return toHaulRecord(record);
 }
 

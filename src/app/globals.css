@@ -92,3 +92,19 @@ body {
   border: 1px solid var(--color-border);
   border-radius: 0.75rem;
 }
+
+.app-dialog {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  border: none;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  width: min(92vw, 440px);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(43, 32, 29, 0.35);
+}
+
+.app-dialog::backdrop {
+  background: rgba(43, 32, 29, 0.5);
+}

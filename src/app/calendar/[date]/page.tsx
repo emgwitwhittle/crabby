@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getHaulsByDate, getLocationById } from "@/lib/airtable";
+import BackButton from "@/components/BackButton";
+import AddHaulDialog from "@/components/AddHaulDialog";
+import { getHaulsByDate, getLocationById, getAllLocations } from "@/lib/airtable";
 import { formatDate } from "@/lib/format";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -9,7 +11,7 @@ export default async function CalendarDayPage({ params }: PageProps<"/calendar/[
   const { date } = await params;
   if (!DATE_RE.test(date)) notFound();
 
-  const hauls = await getHaulsByDate(date);
+  const [hauls, allLocations] = await Promise.all([getHaulsByDate(date), getAllLocations()]);
   const locations = await Promise.all(
     hauls.map((haul) => (haul.locations[0] ? getLocationById(haul.locations[0]) : null)),
   );
@@ -17,6 +19,7 @@ export default async function CalendarDayPage({ params }: PageProps<"/calendar/[
 
   return (
     <div className="flex flex-col gap-4">
+      <BackButton />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">{formatDate(date)}</h1>
@@ -25,13 +28,11 @@ export default async function CalendarDayPage({ params }: PageProps<"/calendar/[
             {totalKeepers === 1 ? "" : "s"} total
           </p>
         </div>
-        <Link href={`/haul/new?date=${date}`} className="btn-primary text-sm">
-          + Add Haul
-        </Link>
+        <AddHaulDialog locations={allLocations} presetDate={date} />
       </div>
 
       {hauls.length === 0 ? (
-        <p className="text-(--color-muted)">No haul logged for this day.</p>
+        <p className="text-(--color-muted)">No hauls logged for this day.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {hauls.map((haul, idx) => {
@@ -40,7 +41,7 @@ export default async function CalendarDayPage({ params }: PageProps<"/calendar/[
               <li key={haul.id} className="card p-4">
                 <div className="flex items-center justify-between">
                   <Link href={`/haul/${haul.id}`} className="font-semibold hover:text-(--color-primary)">
-                    {haul.name || "Untitled haul"}
+                    {haul.unique || "Haul"}
                   </Link>
                   <span className="text-sm font-semibold text-(--color-primary)">
                     {haul.keepers} keeper{haul.keepers === 1 ? "" : "s"}

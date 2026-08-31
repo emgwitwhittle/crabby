@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import HaulList from "@/components/HaulList";
+import BackButton from "@/components/BackButton";
+import AddHaulDialog from "@/components/AddHaulDialog";
 import { getLocationById, getHaulByIds, getAllUsersMap } from "@/lib/airtable";
 import { formatDate, formatDateShort } from "@/lib/format";
 
@@ -17,15 +18,22 @@ export default async function LocationDetailPage({
   ]);
   const sortedHauls = [...hauls].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
   const addedByNames = location.addedBy.map((uid) => usersMap.get(uid)?.name ?? "Unknown");
+  const locationLabel = `Pin ${location.pinNumber}${
+    location.locationDescription ? ` — ${location.locationDescription}` : ""
+  }`;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
+        <BackButton />
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Pin {location.pinNumber}</h1>
-          <Link href={`/haul/new?locationId=${location.id}`} className="btn-primary text-sm">
-            + Add Haul Here
-          </Link>
+          <AddHaulDialog
+            locations={[]}
+            presetLocationId={location.id}
+            presetLocationLabel={locationLabel}
+            triggerLabel="+ Add Haul Here"
+          />
         </div>
 
         <div className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
@@ -42,7 +50,7 @@ export default async function LocationDetailPage({
       </div>
 
       <div>
-        <h2 className="mb-3 text-lg font-bold">Haul at this Location</h2>
+        <h2 className="mb-3 text-lg font-bold">Hauls at this Location</h2>
         <HaulList hauls={sortedHauls} />
       </div>
     </div>
