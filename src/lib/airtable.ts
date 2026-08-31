@@ -146,16 +146,13 @@ function toUserRecord(record: Airtable.Record<Airtable.FieldSet>): UserRecord {
   };
 }
 
-// Natural sort so text-typed "Pin Number" values like "2", "10", "PIN-3" order sensibly.
-function naturalCompare(a: string, b: string): number {
-  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
-}
-
 // ---- Locations ----
 
 export async function getAllLocations(): Promise<LocationRecord[]> {
-  const records = await base(TABLES.LOCATIONS).select({}).all();
-  return records.map(toLocationRecord).sort((a, b) => naturalCompare(a.pinNumber, b.pinNumber));
+  const records = await base(TABLES.LOCATIONS)
+    .select({ sort: [{ field: LOCATION_FIELDS.CREATE_DATE, direction: "desc" }] })
+    .all();
+  return records.map(toLocationRecord);
 }
 
 export async function getRecentLocations(limit: number): Promise<LocationRecord[]> {
@@ -197,7 +194,7 @@ export async function createLocation(fields: {
 
 export async function getAllHaul(): Promise<HaulRecord[]> {
   const records = await base(TABLES.HAUL)
-    .select({ sort: [{ field: HAUL_FIELDS.DATE, direction: "desc" }] })
+    .select({ sort: [{ field: HAUL_FIELDS.CREATE_DATE, direction: "desc" }] })
     .all();
   return records.map(toHaulRecord);
 }
@@ -205,7 +202,7 @@ export async function getAllHaul(): Promise<HaulRecord[]> {
 export async function getRecentHaul(limit: number): Promise<HaulRecord[]> {
   const records = await base(TABLES.HAUL)
     .select({
-      sort: [{ field: HAUL_FIELDS.DATE, direction: "desc" }],
+      sort: [{ field: HAUL_FIELDS.CREATE_DATE, direction: "desc" }],
       maxRecords: limit,
     })
     .all();
@@ -230,7 +227,7 @@ export async function getHaulsByLocationId(locationId: string): Promise<HaulReco
   const records = await base(TABLES.HAUL)
     .select({
       filterByFormula: `FIND('${locationId}', ARRAYJOIN({${HAUL_FIELDS.LOCATIONS}}))`,
-      sort: [{ field: HAUL_FIELDS.DATE, direction: "desc" }],
+      sort: [{ field: HAUL_FIELDS.CREATE_DATE, direction: "desc" }],
     })
     .all();
   return records.map(toHaulRecord);
@@ -240,6 +237,7 @@ export async function getHaulsByDate(dateStr: string): Promise<HaulRecord[]> {
   const records = await base(TABLES.HAUL)
     .select({
       filterByFormula: `IS_SAME({${HAUL_FIELDS.DATE}}, '${dateStr}', 'day')`,
+      sort: [{ field: HAUL_FIELDS.CREATE_DATE, direction: "desc" }],
     })
     .all();
   return records.map(toHaulRecord);

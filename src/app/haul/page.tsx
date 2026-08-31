@@ -3,7 +3,13 @@ import HaulList from "@/components/HaulList";
 import AddHaulDialog from "@/components/AddHaulDialog";
 import { getAllHaul, getAllLocations } from "@/lib/airtable";
 
-type SortKey = "date-desc" | "date-asc" | "keepers-desc" | "keepers-asc";
+type SortKey =
+  | "created-desc"
+  | "created-asc"
+  | "date-desc"
+  | "date-asc"
+  | "keepers-desc"
+  | "keepers-asc";
 
 export default async function AllHaulPage({
   searchParams,
@@ -24,9 +30,11 @@ export default async function AllHaulPage({
   const minKeepers = params.minKeepers?.trim() || "";
   const maxKeepers = params.maxKeepers?.trim() || "";
   const sort: SortKey = (
-    ["date-desc", "date-asc", "keepers-desc", "keepers-asc"].includes(params.sort ?? "")
+    ["created-desc", "created-asc", "date-desc", "date-asc", "keepers-desc", "keepers-asc"].includes(
+      params.sort ?? "",
+    )
       ? params.sort
-      : "date-desc"
+      : "created-desc"
   ) as SortKey;
 
   let filtered = hauls.filter((haul) => {
@@ -39,15 +47,19 @@ export default async function AllHaulPage({
 
   filtered = [...filtered].sort((a, b) => {
     switch (sort) {
+      case "created-asc":
+        return (a.createDate ?? "").localeCompare(b.createDate ?? "");
       case "date-asc":
         return (a.date ?? "").localeCompare(b.date ?? "");
+      case "date-desc":
+        return (b.date ?? "").localeCompare(a.date ?? "");
       case "keepers-desc":
         return b.keepers - a.keepers;
       case "keepers-asc":
         return a.keepers - b.keepers;
-      case "date-desc":
+      case "created-desc":
       default:
-        return (b.date ?? "").localeCompare(a.date ?? "");
+        return (b.createDate ?? "").localeCompare(a.createDate ?? "");
     }
   });
 
@@ -111,8 +123,10 @@ export default async function AllHaulPage({
             Sort by
           </label>
           <select id="sort" name="sort" defaultValue={sort} className="field">
-            <option value="date-desc">Date (newest first)</option>
-            <option value="date-asc">Date (oldest first)</option>
+            <option value="created-desc">Recently added (newest first)</option>
+            <option value="created-asc">Recently added (oldest first)</option>
+            <option value="date-desc">Haul date (newest first)</option>
+            <option value="date-asc">Haul date (oldest first)</option>
             <option value="keepers-desc">Keepers (most first)</option>
             <option value="keepers-asc">Keepers (fewest first)</option>
           </select>

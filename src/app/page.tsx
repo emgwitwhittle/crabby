@@ -3,6 +3,7 @@ import LocationList from "@/components/LocationList";
 import HaulList from "@/components/HaulList";
 import Calendar from "@/components/Calendar";
 import AddHaulDialog from "@/components/AddHaulDialog";
+import CrabLogo from "@/components/CrabLogo";
 import { getRecentLocations, getRecentHaul, getKeepersByDateForMonth, getAllLocations } from "@/lib/airtable";
 import { clampToSeason, defaultMonth } from "@/lib/calendar";
 
@@ -28,6 +29,10 @@ export default async function Home({
 
   return (
     <div className="flex flex-col gap-8">
+      <div className="flex justify-center py-2">
+        <CrabLogo size={110} />
+      </div>
+
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h1 className="text-xl font-bold">Locations</h1>

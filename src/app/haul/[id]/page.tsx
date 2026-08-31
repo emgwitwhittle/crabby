@@ -21,7 +21,11 @@ export default async function HaulDetailPage({ params }: PageProps<"/haul/[id]">
     haul.date ? getHaulsByDate(haul.date) : Promise.resolve([]),
   ]);
 
-  const addedByNames = haul.addedBy.map((uid) => usersMap.get(uid)?.name ?? "Unknown");
+  const addedByNames = haul.addedBy.map((uid) => {
+    const addedByUser = usersMap.get(uid);
+    if (!addedByUser) return "Unknown";
+    return addedByUser.email ? `${addedByUser.name} (${addedByUser.email})` : addedByUser.name;
+  });
   const otherSameDayHauls = sameDayHauls.filter((h) => h.id !== haul.id);
 
   return (

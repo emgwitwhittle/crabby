@@ -2,8 +2,16 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { createLocation, createHaul, updateHaul } from "@/lib/airtable";
 import { getCurrentUser } from "@/lib/session";
+import { SESSION_COOKIE } from "@/lib/session-cookie";
+
+export async function logoutAction() {
+  const store = await cookies();
+  store.delete(SESSION_COOKIE);
+  redirect("/login/required");
+}
 
 export async function addLocationAction(formData: FormData) {
   const pinNumber = String(formData.get("pinNumber") ?? "").trim();

@@ -16,8 +16,14 @@ export default async function LocationDetailPage({
     getHaulByIds(location.haul),
     getAllUsersMap(),
   ]);
-  const sortedHauls = [...hauls].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
-  const addedByNames = location.addedBy.map((uid) => usersMap.get(uid)?.name ?? "Unknown");
+  const sortedHauls = [...hauls].sort((a, b) =>
+    (b.createDate ?? "").localeCompare(a.createDate ?? ""),
+  );
+  const addedByNames = location.addedBy.map((uid) => {
+    const addedByUser = usersMap.get(uid);
+    if (!addedByUser) return "Unknown";
+    return addedByUser.email ? `${addedByUser.name} (${addedByUser.email})` : addedByUser.name;
+  });
   const locationLabel = `Pin ${location.pinNumber}${
     location.locationDescription ? ` — ${location.locationDescription}` : ""
   }`;
